@@ -1,4 +1,4 @@
-package co.com.bancolombia.model.domainerror;
+package co.com.bancolombia.model.exception;
 import co.com.bancolombia.model.contextdata.ContextData;
 import lombok.Builder;
 import lombok.AllArgsConstructor;

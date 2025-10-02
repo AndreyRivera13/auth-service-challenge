@@ -6,7 +6,7 @@ import co.com.bancolombia.model.session.Session;
 import co.com.bancolombia.model.contextdata.ContextData;
 import co.com.bancolombia.model.user.gateways.UserRepository;
 import co.com.bancolombia.model.session.gateways.SessionRepository;
-import co.com.bancolombia.model.domainerror.DomainError;
+import co.com.bancolombia.model.exception.DomainError;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
