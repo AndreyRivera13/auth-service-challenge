@@ -1,5 +1,7 @@
 package co.com.bancolombia.api;
 
+import co.com.bancolombia.usecase.signin.SignInUseCase;
+import co.com.bancolombia.usecase.signup.SignUpUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -9,21 +11,17 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class Handler {
-//private  final UseCase useCase;
-//private  final UseCase2 useCase2;
+private final SignInUseCase signInUseCase;
+private final SignUpUseCase signUpUseCase;
 
-    public Mono<ServerResponse> listenGETUseCase(ServerRequest serverRequest) {
+    public Mono<ServerResponse> signupPOSTUseCase(ServerRequest serverRequest) {
         // useCase.logic();
         return ServerResponse.ok().bodyValue("");
     }
 
-    public Mono<ServerResponse> listenGETOtherUseCase(ServerRequest serverRequest) {
+    public Mono<ServerResponse> signinPOSTUseCase(ServerRequest serverRequest) {
         // useCase2.logic();
         return ServerResponse.ok().bodyValue("");
     }
 
-    public Mono<ServerResponse> listenPOSTUseCase(ServerRequest serverRequest) {
-        // useCase.logic();
-        return ServerResponse.ok().bodyValue("");
-    }
 }

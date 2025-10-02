@@ -1,6 +1,7 @@
-package co.com.bancolombia.model.user;
-import lombok.Builder;
+package co.com.bancolombia.model.session;
+
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,9 +9,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @Builder(toBuilder = true)
-public class User {
-    private String id;
-    private String name;
+public class Session {
+    private String sessionId;
     private String email;
-    private String password;
 }

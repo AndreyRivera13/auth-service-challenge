@@ -1,5 +1,9 @@
 package co.com.bancolombia.config;
 
+import co.com.bancolombia.model.session.gateways.SessionRepository;
+import co.com.bancolombia.model.user.gateways.UserRepository;
+import co.com.bancolombia.usecase.signin.SignInUseCase;
+import co.com.bancolombia.usecase.signup.SignUpUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -7,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class UseCasesConfigTest {
+class UseCasesConfigTest {
 
     @Test
     void testUseCaseBeansExist() {
@@ -31,8 +35,23 @@ public class UseCasesConfigTest {
     static class TestConfig {
 
         @Bean
-        public MyUseCase myUseCase() {
-            return new MyUseCase();
+        public UserRepository userRepository() {
+            return org.mockito.Mockito.mock(UserRepository.class);
+        }
+
+        @Bean
+        public SessionRepository sessionRepository() {
+            return org.mockito.Mockito.mock(SessionRepository.class);
+        }
+
+        @Bean
+        public SignInUseCase signInUseCase(UserRepository userRepository, SessionRepository sessionRepository) {
+            return new SignInUseCase(userRepository, sessionRepository);
+        }
+
+        @Bean
+        public SignUpUseCase signUpUseCase(UserRepository userRepository) {
+            return new SignUpUseCase(userRepository);
         }
     }
 
