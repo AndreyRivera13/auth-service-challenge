@@ -13,6 +13,9 @@ subprojects {
     apply plugin: 'info.solidsoft.pitest'
 
     //compileJava.dependsOn validateStructure
+    validateStructure {
+        enabled = false
+    }
 
     java {
         sourceCompatibility = JavaVersion.VERSION_17

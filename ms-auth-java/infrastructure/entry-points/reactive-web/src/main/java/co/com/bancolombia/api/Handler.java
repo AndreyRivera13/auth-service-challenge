@@ -62,15 +62,14 @@ public class Handler {
     private User mapToUserSignUpRequest(SignUpRequest request) {
 
         return User.builder().
-                name( request.getName()).
                 email(request.getEmail()).
                 password(request.getPassword()).
                 build();
     }
-    private User mapToUserSignInRequest(SignInRequest request) {
+   /* private User mapToUserSignInRequest(SignInRequest request) {
         return User.builder().
-                name( request.getUsername()).
+                email(request.getEmail()).
                 password(request.getPassword()).
                 build();
-    }
+    }*/
 }
