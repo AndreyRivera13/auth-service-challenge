@@ -1,5 +1,8 @@
 package co.com.bancolombia.util.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = false)
 public class SignInRequest {
     private String email;
     private String password;

@@ -1,28 +1,26 @@
 package co.com.bancolombia.model.user;
 import lombok.Builder;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @Builder(toBuilder = true)
 public class User {
 
     private String email;
     private String password;
+    private String name;
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
+    public User(String email, String password, String name) {
         this.email = email;
+        this.password = password;
+        this.name = name;
     }
 
-    public String getPassword() {
-        return password;
+    public User(String email, String password) {
+        this.email = email;
+        this.password = password;
     }
 
 }

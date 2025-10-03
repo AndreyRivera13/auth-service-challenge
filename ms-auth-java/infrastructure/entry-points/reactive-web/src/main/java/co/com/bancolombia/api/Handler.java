@@ -25,19 +25,15 @@ public class Handler {
     private final SignUpUseCase signUpUseCase;
     private static final Logger log = LoggerFactory.getLogger(Handler.class);
 
-
     public Mono<ServerResponse> signupPOSTUseCase(ServerRequest serverRequest) {
         log.debug("Iniciando proceso de signup");
         return headersValidation.validateHeaders(serverRequest)
                 .then(serverRequest.bodyToMono(SignUpRequest.class)
                         .flatMap(request -> {
-                            log.info("Datos recibidos para signup: {}", request.getEmail());
                             User user = mapToUserSignUpRequest(request);
-                            String messageId = serverRequest.headers().firstHeader("message-id");
-                            String consumerCode = serverRequest.headers().firstHeader("consumer-code");
                             ContextData contextData = ContextData.builder()
-                                    .messageId(messageId)
-                                    .consumerCode(consumerCode)
+                                    .messageId(serverRequest.headers().firstHeader("message-id"))
+                                    .consumerCode(serverRequest.headers().firstHeader("consumer-code"))
                                     .build();
                             return signUpUseCase.execute(user, contextData);
                         })
@@ -47,7 +43,6 @@ public class Handler {
                         .header("consumer-code", serverRequest.headers().firstHeader("consumer-code"))
                         .build());
     }
-
 
     public Mono<ServerResponse> signinPOSTUseCase(ServerRequest serverRequest) {
         log.debug("Iniciando proceso de signin");
@@ -60,8 +55,7 @@ public class Handler {
                                     .consumerCode(serverRequest.headers().firstHeader("consumer-code"))
                                     .build();
                             return signInUseCase.execute(user, context);
-                        })
-                )
+                        }))
                 .flatMap(session -> {
                     SignInResponse body = new SignInResponse(session.getSessionId());
                     return ServerResponse.ok()
@@ -74,12 +68,13 @@ public class Handler {
 
 
     private User mapToUserSignUpRequest(SignUpRequest request) {
-
         return User.builder().
                 email(request.getEmail()).
                 password(request.getPassword()).
+                name(request.getName()).
                 build();
     }
+
     private User mapToUserSignInRequest(SignInRequest request) {
         return User.builder().
                 email(request.getEmail()).
