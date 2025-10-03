@@ -15,7 +15,7 @@ public class HeadersValidation {
     private static final Pattern uuidPattern = Pattern.compile(REGEX_UUID);
 
     public Mono<Void> validateHeaders(ServerRequest request) {
-        String consumer = request.headers().firstHeader("consumer-code");
+        String consumer = request.headers().firstHeader("x-request-id");
         String messageId = request.headers().firstHeader("message-id");
         if (!validateUUID(messageId) || consumer == null || consumer.trim().isEmpty()) {
             return Mono.error(new AppException("MISSING_HEADER", HEADERS_GENERAL_ERROR));
