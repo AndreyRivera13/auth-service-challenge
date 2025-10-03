@@ -40,24 +40,32 @@ public class Handler {
                             return signUpUseCase.execute(user, contextData);
                         })
                 )
-                .flatMap(result -> {
-                    log.info("Signup exitoso para usuario: {}", result);
-                    return ServerResponse.ok().bodyValue(result);
-                });
+                .then(ServerResponse.created(serverRequest.uri())
+                        .header("message-id", serverRequest.headers().firstHeader("message-id"))
+                        .header("consumer-code", serverRequest.headers().firstHeader("consumer-code"))
+                        .build());
     }
 
-    /*
+
     public Mono<ServerResponse> signinPOSTUseCase(ServerRequest serverRequest) {
+        log.debug("Iniciando proceso de signin");
         return headersValidation.validateHeaders(serverRequest)
-                .flatMap(user -> serverRequest.bodyToMono(SignInRequest.class)
+                .then(serverRequest.bodyToMono(SignInRequest.class)
                         .flatMap(request -> {
-                            String messageId = serverRequest.headers().firstHeader("message-id-header");
-                            return signInUseCase.execute(user, messageId);
+                            User user = mapToUserSignInRequest(request);
+                            ContextData context = ContextData.builder()
+                                    .messageId(serverRequest.headers().firstHeader("message-id"))
+                                    .consumerCode(serverRequest.headers().firstHeader("consumer-code"))
+                                    .build();
+                            return signInUseCase.execute(user, context);
                         })
                 )
-                .flatMap(result -> ServerResponse.ok().bodyValue(result));
+                .then(ServerResponse.ok()
+                        .header("message-id", serverRequest.headers().firstHeader("message-id"))
+                        .header("consumer-code", serverRequest.headers().firstHeader("consumer-code"))
+                        .build());
     }
-    */
+
 
     private User mapToUserSignUpRequest(SignUpRequest request) {
 
@@ -66,10 +74,10 @@ public class Handler {
                 password(request.getPassword()).
                 build();
     }
-   /* private User mapToUserSignInRequest(SignInRequest request) {
+    private User mapToUserSignInRequest(SignInRequest request) {
         return User.builder().
                 email(request.getEmail()).
                 password(request.getPassword()).
                 build();
-    }*/
+    }
 }

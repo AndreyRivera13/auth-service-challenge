@@ -46,24 +46,27 @@ class RouterRestTest {
                 .header("consumer-code", "test-consumer")
                 .bodyValue("{\"name\":\"Test\",\"email\":\"test@test.com\",\"password\":\"1234\"}")
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(userResponse -> Assertions.assertThat(userResponse).isEmpty());
+                .expectStatus().isCreated()
+                .expectBody().isEmpty();
+
     }
 
-
-  /*
     @Test
     void signinPOSTUseCase() {
+        when(headersValidation.validateHeaders(ArgumentMatchers.any()))
+                .thenReturn(Mono.empty());
+        when(signInUseCase.execute(ArgumentMatchers.any(), ArgumentMatchers.any()))
+                .thenReturn(Mono.empty());
+
         webTestClient.post()
                 .uri("/api/v1/signin")
+                .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .header("message-id", "123e4567-e89b-12d3-a456-426614174000")
                 .header("consumer-code", "test-consumer")
-                .bodyValue("{\"username\":\"Test\",\"password\":\"1234\"}")
+                .bodyValue("{\"email\":\"test@test.com\",\"password\":\"12345678\"}")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(String.class)
-                .value(userResponse -> Assertions.assertThat(userResponse).isEmpty());
-    }*/
+                .expectBody().isEmpty();
+    }
 }
