@@ -24,6 +24,8 @@ public class Handler {
     private final SignInUseCase signInUseCase;
     private final SignUpUseCase signUpUseCase;
     private static final Logger log = LoggerFactory.getLogger(Handler.class);
+    private static final String MESSAGE_ID_HEADER = "message-id";
+    private static final String X_REQUEST_ID_HEADER = "x-request-id";
 
     public Mono<ServerResponse> signupPOSTUseCase(ServerRequest serverRequest) {
         log.debug("Iniciando proceso de signup");
@@ -32,15 +34,15 @@ public class Handler {
                         .flatMap(request -> {
                             User user = mapToUserSignUpRequest(request);
                             ContextData contextData = ContextData.builder()
-                                    .messageId(serverRequest.headers().firstHeader("message-id"))
-                                    .consumerCode(serverRequest.headers().firstHeader("consumer-code"))
+                                    .messageId(serverRequest.headers().firstHeader(MESSAGE_ID_HEADER))
+                                    .consumerCode(serverRequest.headers().firstHeader(X_REQUEST_ID_HEADER))
                                     .build();
                             return signUpUseCase.execute(user, contextData);
                         })
                 )
                 .then(ServerResponse.created(serverRequest.uri())
-                        .header("message-id", serverRequest.headers().firstHeader("message-id"))
-                        .header("consumer-code", serverRequest.headers().firstHeader("consumer-code"))
+                        .header(MESSAGE_ID_HEADER, serverRequest.headers().firstHeader(MESSAGE_ID_HEADER))
+                        .header(X_REQUEST_ID_HEADER, serverRequest.headers().firstHeader(X_REQUEST_ID_HEADER))
                         .build());
     }
 
@@ -51,16 +53,16 @@ public class Handler {
                         .flatMap(request -> {
                             User user = mapToUserSignInRequest(request);
                             ContextData context = ContextData.builder()
-                                    .messageId(serverRequest.headers().firstHeader("message-id"))
-                                    .consumerCode(serverRequest.headers().firstHeader("consumer-code"))
+                                    .messageId(serverRequest.headers().firstHeader(MESSAGE_ID_HEADER))
+                                    .consumerCode(serverRequest.headers().firstHeader(X_REQUEST_ID_HEADER))
                                     .build();
                             return signInUseCase.execute(user, context);
                         }))
                 .flatMap(session -> {
                     SignInResponse body = new SignInResponse(session.getSessionId());
                     return ServerResponse.ok()
-                            .header("message-id", serverRequest.headers().firstHeader("message-id"))
-                            .header("consumer-code", serverRequest.headers().firstHeader("consumer-code"))
+                            .header(MESSAGE_ID_HEADER, serverRequest.headers().firstHeader(MESSAGE_ID_HEADER))
+                            .header(X_REQUEST_ID_HEADER, serverRequest.headers().firstHeader(X_REQUEST_ID_HEADER))
                             .contentType(MediaType.APPLICATION_JSON)
                             .bodyValue(body);
                 });

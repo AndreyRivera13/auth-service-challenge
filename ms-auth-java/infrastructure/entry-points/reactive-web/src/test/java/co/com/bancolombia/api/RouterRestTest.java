@@ -43,7 +43,7 @@ class RouterRestTest {
                 .contentType(MediaType.APPLICATION_JSON) // <- Agrega esta línea
                 .accept(MediaType.APPLICATION_JSON)
                 .header("message-id", "123e4567-e89b-12d3-a456-426614174000")
-                .header("consumer-code", "test-consumer")
+                .header("x-request-id", "x-request-id-test")
                 .bodyValue("{\"name\":\"Test\",\"email\":\"test@test.com\",\"password\":\"1234\"}")
                 .exchange()
                 .expectStatus().isCreated()
@@ -63,7 +63,7 @@ class RouterRestTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .header("message-id", "123e4567-e89b-12d3-a456-426614174000")
-                .header("consumer-code", "test-consumer")
+                .header("x-request-id", "x-request-id-test")
                 .bodyValue("{\"email\":\"test@test.com\",\"password\":\"12345678\"}")
                 .exchange()
                 .expectStatus().isOk()
