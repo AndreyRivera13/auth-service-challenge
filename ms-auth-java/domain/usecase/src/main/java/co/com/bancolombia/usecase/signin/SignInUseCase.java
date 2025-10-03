@@ -1,6 +1,7 @@
 // src/main/java/co/com/bancolombia/usecase/signin/SignInUseCase.java
 package co.com.bancolombia.usecase.signin;
 
+import co.com.bancolombia.model.signin.gateways.SignInRepository;
 import co.com.bancolombia.model.user.User;
 import co.com.bancolombia.model.session.Session;
 import co.com.bancolombia.model.contextdata.ContextData;
@@ -17,7 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SignInUseCase {
     private static final Logger log = LoggerFactory.getLogger(SignInUseCase.class);
-    private final UserRepository userRepository;
+    private final SignInRepository signInRepository;
     private final SessionRepository sessionRepository;
 
     public Mono<Session> execute(User user, ContextData context) {
@@ -26,7 +27,7 @@ public class SignInUseCase {
             log.warn("Request mal formado: {}", user);
             return Mono.error(new DomainError("MALFORMED_REQUEST", "Request inválido", null, context));
         }
-        return userRepository.findByEmail(user.getEmail())
+        return signInRepository.findByEmail(user.getEmail())
                 .switchIfEmpty(Mono.defer(() -> {
                     log.warn("Usuario no encontrado: {}", user.getEmail());
                     return Mono.error(new DomainError("USER_NOT_FOUND", "Usuario no existe", null, context));
