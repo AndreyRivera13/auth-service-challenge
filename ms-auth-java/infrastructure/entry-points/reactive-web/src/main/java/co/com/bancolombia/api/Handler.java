@@ -71,6 +71,7 @@ public class Handler {
         return User.builder().
                 email(request.getEmail()).
                 password(request.getPassword()).
+                name(request.getName()).
                 build();
     }
 
