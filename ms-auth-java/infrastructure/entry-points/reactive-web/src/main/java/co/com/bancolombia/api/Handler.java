@@ -7,9 +7,11 @@ import co.com.bancolombia.usecase.signin.SignInUseCase;
 import co.com.bancolombia.usecase.signup.SignUpUseCase;
 import co.com.bancolombia.util.request.SignInRequest;
 import co.com.bancolombia.util.request.SignUpRequest;
+import co.com.bancolombia.util.response.SignInResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -60,10 +62,14 @@ public class Handler {
                             return signInUseCase.execute(user, context);
                         })
                 )
-                .then(ServerResponse.ok()
-                        .header("message-id", serverRequest.headers().firstHeader("message-id"))
-                        .header("consumer-code", serverRequest.headers().firstHeader("consumer-code"))
-                        .build());
+                .flatMap(session -> {
+                    SignInResponse body = new SignInResponse(session.getSessionId());
+                    return ServerResponse.ok()
+                            .header("message-id", serverRequest.headers().firstHeader("message-id"))
+                            .header("consumer-code", serverRequest.headers().firstHeader("consumer-code"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(body);
+                });
     }
 
 
