@@ -7,9 +7,11 @@ import co.com.bancolombia.usecase.signin.SignInUseCase;
 import co.com.bancolombia.usecase.signup.SignUpUseCase;
 import co.com.bancolombia.util.request.SignInRequest;
 import co.com.bancolombia.util.request.SignUpRequest;
+import co.com.bancolombia.util.response.SignInResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -29,7 +31,7 @@ public class Handler {
         return headersValidation.validateHeaders(serverRequest)
                 .then(serverRequest.bodyToMono(SignUpRequest.class)
                         .flatMap(request -> {
-                            log.info("Datos recibidos para signup: {}", request);
+                            log.info("Datos recibidos para signup: {}", request.getEmail());
                             User user = mapToUserSignUpRequest(request);
                             String messageId = serverRequest.headers().firstHeader("message-id");
                             String consumerCode = serverRequest.headers().firstHeader("consumer-code");
@@ -40,24 +42,36 @@ public class Handler {
                             return signUpUseCase.execute(user, contextData);
                         })
                 )
-                .flatMap(result -> {
-                    log.info("Signup exitoso para usuario: {}", result);
-                    return ServerResponse.ok().bodyValue(result);
+                .then(ServerResponse.created(serverRequest.uri())
+                        .header("message-id", serverRequest.headers().firstHeader("message-id"))
+                        .header("consumer-code", serverRequest.headers().firstHeader("consumer-code"))
+                        .build());
+    }
+
+
+    public Mono<ServerResponse> signinPOSTUseCase(ServerRequest serverRequest) {
+        log.debug("Iniciando proceso de signin");
+        return headersValidation.validateHeaders(serverRequest)
+                .then(serverRequest.bodyToMono(SignInRequest.class)
+                        .flatMap(request -> {
+                            User user = mapToUserSignInRequest(request);
+                            ContextData context = ContextData.builder()
+                                    .messageId(serverRequest.headers().firstHeader("message-id"))
+                                    .consumerCode(serverRequest.headers().firstHeader("consumer-code"))
+                                    .build();
+                            return signInUseCase.execute(user, context);
+                        })
+                )
+                .flatMap(session -> {
+                    SignInResponse body = new SignInResponse(session.getSessionId());
+                    return ServerResponse.ok()
+                            .header("message-id", serverRequest.headers().firstHeader("message-id"))
+                            .header("consumer-code", serverRequest.headers().firstHeader("consumer-code"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(body);
                 });
     }
 
-    /*
-    public Mono<ServerResponse> signinPOSTUseCase(ServerRequest serverRequest) {
-        return headersValidation.validateHeaders(serverRequest)
-                .flatMap(user -> serverRequest.bodyToMono(SignInRequest.class)
-                        .flatMap(request -> {
-                            String messageId = serverRequest.headers().firstHeader("message-id-header");
-                            return signInUseCase.execute(user, messageId);
-                        })
-                )
-                .flatMap(result -> ServerResponse.ok().bodyValue(result));
-    }
-    */
 
     private User mapToUserSignUpRequest(SignUpRequest request) {
 
@@ -66,10 +80,10 @@ public class Handler {
                 password(request.getPassword()).
                 build();
     }
-   /* private User mapToUserSignInRequest(SignInRequest request) {
+    private User mapToUserSignInRequest(SignInRequest request) {
         return User.builder().
                 email(request.getEmail()).
                 password(request.getPassword()).
                 build();
-    }*/
+    }
 }

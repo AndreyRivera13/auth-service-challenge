@@ -13,7 +13,7 @@ public class RouterRest {
     @Bean
     public RouterFunction<ServerResponse> routerFunction(Handler handler) {
         return route(POST("/api/v1/signup"), handler::signupPOSTUseCase)
-                //.andRoute(POST("/api/v1/signin"), handler::signinPOSTUseCase)
+                .andRoute(POST("/api/v1/signin"), handler::signinPOSTUseCase)
                 ;
     }
 }
