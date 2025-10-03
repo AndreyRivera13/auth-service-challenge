@@ -2,6 +2,7 @@ package co.com.bancolombia.memorypersistence.signinadapter;
 
 import co.com.bancolombia.memorypersistence.shared.MemoryUserStore;
 import co.com.bancolombia.model.session.Session;
+import co.com.bancolombia.model.session.gateways.SessionRepository;
 import co.com.bancolombia.model.signin.gateways.SignInRepository;
 import co.com.bancolombia.model.user.User;
 import lombok.RequiredArgsConstructor;
@@ -12,20 +13,17 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class SignInAdapterImpl implements SignInRepository {
 
-    private final MemoryUserStore store;
+        private final MemoryUserStore store;
+        private final SessionRepository sessionRepository;
 
-    public Mono<User> findByEmail(String email) {
-        String password = store.getPassword(email).getPassword();
-        return password != null ? Mono.just(new User(email, password)) : Mono.empty();
-    }
+        @Override
+        public Mono<User> findByEmail(String email) {
+            User user = store.getByEmail(email);
+            return user != null ? Mono.just(user) : Mono.empty();
+        }
 
-    public Mono<Boolean> validateCredentials(String email, String rawPassword) {
-        String stored = store.getPassword(email).getPassword();
-        return Mono.just(stored != null && stored.equals(rawPassword));
+        @Override
+        public Mono<Session> save(Session session) {
+            return sessionRepository.save(session);
+        }
     }
-
-    @Override
-    public Mono<Session> save(Session session) {
-        return Mono.just(session);
-    }
-}

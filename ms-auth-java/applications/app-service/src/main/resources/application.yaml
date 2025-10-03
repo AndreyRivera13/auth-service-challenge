@@ -11,6 +11,9 @@ spring:
       path: "/h2"
   profiles:
     include: null
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
 management:
   endpoints:
     web:

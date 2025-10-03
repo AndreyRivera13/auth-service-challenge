@@ -12,18 +12,17 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class SignUpAdapterImpl implements SignUpRepository {
 
-    @Autowired
-    private final MemoryUserStore store;
+        private final MemoryUserStore store;
 
-    @Override
-    public Mono<User> findByEmail(String email) {
-        String password = store.getByEmail(email);
-        return password != null ? Mono.just(new User(email, password)) : Mono.empty();
-    }
+        @Override
+        public Mono<User> findByEmail(String email) {
+            User user = store.getByEmail(email);
+            return user != null ? Mono.just(user) : Mono.empty();
+        }
 
-    @Override
-    public Mono<Void> save(User user) {
-        store.save(user);
-        return Mono.empty();
+        @Override
+        public Mono<Void> save(User user) {
+            store.save(user);
+            return Mono.empty();
+        }
     }
-}
