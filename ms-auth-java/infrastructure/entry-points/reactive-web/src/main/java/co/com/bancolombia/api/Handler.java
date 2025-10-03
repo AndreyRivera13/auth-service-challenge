@@ -31,7 +31,7 @@ public class Handler {
         return headersValidation.validateHeaders(serverRequest)
                 .then(serverRequest.bodyToMono(SignUpRequest.class)
                         .flatMap(request -> {
-                            log.info("Datos recibidos para signup: {}", request);
+                            log.info("Datos recibidos para signup: {}", request.getEmail());
                             User user = mapToUserSignUpRequest(request);
                             String messageId = serverRequest.headers().firstHeader("message-id");
                             String consumerCode = serverRequest.headers().firstHeader("consumer-code");
