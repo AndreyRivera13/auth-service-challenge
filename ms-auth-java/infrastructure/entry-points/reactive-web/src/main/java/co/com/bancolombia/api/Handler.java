@@ -37,7 +37,8 @@ public class Handler {
                                     .messageId(serverRequest.headers().firstHeader(MESSAGE_ID_HEADER))
                                     .consumerCode(serverRequest.headers().firstHeader(X_REQUEST_ID_HEADER))
                                     .build();
-                            return signUpUseCase.execute(user, contextData);
+                            return signUpUseCase.execute(user, contextData)
+                                    .contextWrite(ctx -> ctx.put(ContextData.class, contextData));
                         })
                 )
                 .then(ServerResponse.created(serverRequest.uri())
@@ -56,7 +57,8 @@ public class Handler {
                                     .messageId(serverRequest.headers().firstHeader(MESSAGE_ID_HEADER))
                                     .consumerCode(serverRequest.headers().firstHeader(X_REQUEST_ID_HEADER))
                                     .build();
-                            return signInUseCase.execute(user, context);
+                            return signInUseCase.execute(user, context)
+                                    .contextWrite(ctx -> ctx.put(ContextData.class, context));
                         }))
                 .flatMap(session -> {
                     SignInResponse body = new SignInResponse(session.getSessionId());
@@ -67,7 +69,6 @@ public class Handler {
                             .bodyValue(body);
                 });
     }
-
 
     private User mapToUserSignUpRequest(SignUpRequest request) {
         return User.builder().
