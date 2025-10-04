@@ -12,9 +12,9 @@ defmodule Authelixir.Domain.UseCase.Signin do
   - Errores se retornan como {:error, %AppException{}} (un solo tipo de error de dominio).
   """
 
-  alias Authelixir.Domain.Model.{AppException, Session, User, Contextdata}
+  alias Authelixir.Domain.Model.{AppException, Session, User, ContextData}
 
-  @type context :: Contextdata.t()
+  @type context :: ContextData.t()
   @type email :: String.t()
   @type password :: String.t()
   @type user_repo :: module()
@@ -22,7 +22,7 @@ defmodule Authelixir.Domain.UseCase.Signin do
 
   @spec execute(context, email, password, user_repo, session_repo) ::
           {:ok, Session.t()} | {:error, AppException.t()}
-  def execute(%Contextdata{} = ctx, email, password, user_repo, session_repo) do
+  def execute(%ContextData{} = ctx, email, password, user_repo, session_repo) do
     with {:ok, %User{} = user} <- fetch_user(ctx, email, user_repo),
          :ok <- validate_password(user, password),
          {:ok, %Session{} = session} <- create_and_store_session(ctx, user, session_repo) do
@@ -60,6 +60,7 @@ defmodule Authelixir.Domain.UseCase.Signin do
 
   defp create_and_store_session(ctx, %User{email: email}, repo) do
     session = Session.new(email)
+
     case repo.save(ctx, session) do
       {:ok, %Session{} = s} -> {:ok, s}
       {:error, %AppException{} = e} -> {:error, e}

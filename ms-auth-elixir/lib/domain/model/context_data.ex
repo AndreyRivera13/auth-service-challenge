@@ -1,8 +1,8 @@
-defmodule Authelixir.Domain.Model.Contextdata do
+defmodule Authelixir.Domain.Model.ContextData do
   @moduledoc """
-  Contextdata
+  ContextData
   """
-  
+
   defstruct [:message_id, :request_id, :timestamp]
 
   @type t :: %__MODULE__{

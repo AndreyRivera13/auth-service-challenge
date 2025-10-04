@@ -40,7 +40,11 @@ defmodule Authelixir.Domain.Model.AppException do
   end
 
   def new(_other, message, metadata) do
-    %__MODULE__{code: :UNEXPECTED_ERROR, message: message || "Unexpected error", metadata: scrub(metadata)}
+    %__MODULE__{
+      code: :UNEXPECTED_ERROR,
+      message: message || "Unexpected error",
+      metadata: scrub(metadata)
+    }
   end
 
   @spec http_status(t()) :: pos_integer()

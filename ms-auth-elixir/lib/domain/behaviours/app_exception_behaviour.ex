@@ -1,6 +1,6 @@
-defmodule Authelixir.Domain.Behaviours.ContextdataBehaviour do
+defmodule Authelixir.Domain.Behaviours.AppExceptionBehaviour do
   @moduledoc """
-  ContextdataBehaviour
+  AppExceptionBehaviour
   """
 
   # @callback replace_function_name(param_one::term, param_two::term)::{:ok, true::term} | {:error, reason::term}
