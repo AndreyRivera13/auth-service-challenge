@@ -1,6 +1,6 @@
-defmodule Authelixir.Domain.Model.Appexception do
+defmodule Authelixir.Domain.Model.AppException do
   @moduledoc """
-  Appexception
+  Único tipo de error de dominio.
   """
 
   @codes ~w(
@@ -31,19 +31,21 @@ defmodule Authelixir.Domain.Model.Appexception do
   @spec new(code()) :: t()
   def new(code) when code in @codes, do: %__MODULE__{code: code}
 
-  @spec new(code(), String.t() | nil, map() | nil) :: t()
-  def new(code, message, metadata \\ nil) when code in @codes do
+  # Cabeza con defaults (obligatoria cuando hay múltiples cláusulas)
+  @spec new(code() | any(), String.t() | nil, map() | nil) :: t()
+  def new(code, message \\ nil, metadata \\ nil)
+
+  def new(code, message, metadata) when code in @codes do
     %__MODULE__{code: code, message: message, metadata: scrub(metadata)}
   end
 
-  def new(_other, message \\ "Unexpected error", metadata \\ nil),
-    do: %__MODULE__{code: :UNEXPECTED_ERROR, message: message, metadata: scrub(metadata)}
+  def new(_other, message, metadata) do
+    %__MODULE__{code: :UNEXPECTED_ERROR, message: message || "Unexpected error", metadata: scrub(metadata)}
+  end
 
   @spec http_status(t()) :: pos_integer()
   def http_status(%__MODULE__{code: c}), do: Map.get(@http_map, c, 500)
 
   defp scrub(nil), do: nil
-  defp scrub(m) when is_map(m) do
-    Map.drop(m, [:password, "password"])
-  end
+  defp scrub(m) when is_map(m), do: Map.drop(m, [:password, "password"])
 end
