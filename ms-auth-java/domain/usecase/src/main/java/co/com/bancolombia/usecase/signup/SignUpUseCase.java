@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class SignUpUseCase {
     private final SignUpRepository sinUpRepository;
+    private final UserRepository userRepository;
     private static final Logger log = LoggerFactory.getLogger(SignUpUseCase.class);
     private static final Pattern EMAIL_REGEX = Pattern.compile("^[\\w-.]+@[\\w-]+\\.[a-zA-Z]{2,}$");
 
@@ -33,7 +34,7 @@ public class SignUpUseCase {
             log.warn("Password débil para email: {}", user.getEmail());
             return Mono.error(new DomainError("WEAK_PASSWORD", "Password débil", null, context));
         }
-        return sinUpRepository.findByEmail(user.getEmail())
+        return userRepository.findByEmail(user.getEmail())
                 .flatMap(existing -> {
                     log.warn("Email ya registrado: {}", user.getEmail());
                     return Mono.error(new DomainError("EMAIL_ALREADY_EXISTS", "Email ya registrado", null, context));

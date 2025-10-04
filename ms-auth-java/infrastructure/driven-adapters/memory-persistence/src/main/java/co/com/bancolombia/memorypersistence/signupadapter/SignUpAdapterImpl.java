@@ -4,7 +4,6 @@ import co.com.bancolombia.memorypersistence.shared.MemoryUserStore;
 import co.com.bancolombia.model.signup.gateways.SignUpRepository;
 import co.com.bancolombia.model.user.User;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
@@ -13,12 +12,6 @@ import reactor.core.publisher.Mono;
 public class SignUpAdapterImpl implements SignUpRepository {
 
         private final MemoryUserStore store;
-
-        @Override
-        public Mono<User> findByEmail(String email) {
-            User user = store.getByEmail(email);
-            return user != null ? Mono.just(user) : Mono.empty();
-        }
 
         @Override
         public Mono<Void> save(User user) {

@@ -5,7 +5,6 @@ import co.com.bancolombia.model.user.User;
 import reactor.core.publisher.Mono;
 
 public interface SignInRepository {
-    Mono<User> findByEmail(String email);
     Mono<Session> save(Session session);
 
 }

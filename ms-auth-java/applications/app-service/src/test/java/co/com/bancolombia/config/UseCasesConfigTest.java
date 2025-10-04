@@ -1,6 +1,5 @@
 package co.com.bancolombia.config;
 
-import co.com.bancolombia.model.session.gateways.SessionRepository;
 import co.com.bancolombia.model.signin.gateways.SignInRepository;
 import co.com.bancolombia.model.signup.gateways.SignUpRepository;
 import co.com.bancolombia.model.user.gateways.UserRepository;
@@ -42,11 +41,6 @@ class UseCasesConfigTest {
         }
 
         @Bean
-        public SessionRepository sessionRepository() {
-            return org.mockito.Mockito.mock(SessionRepository.class);
-        }
-
-        @Bean
         public SignInRepository signInRepository() {
             return org.mockito.Mockito.mock(SignInRepository.class);
         }
@@ -57,13 +51,13 @@ class UseCasesConfigTest {
         }
 
         @Bean
-        public SignInUseCase signInUseCase(SignInRepository signInRepository, SessionRepository sessionRepository) {
-            return new SignInUseCase(signInRepository, sessionRepository);
+        public SignInUseCase signInUseCase(SignInRepository signInRepository, UserRepository userRepository) {
+            return new SignInUseCase(signInRepository,userRepository);
         }
 
         @Bean
-        public SignUpUseCase signUpUseCase(SignUpRepository signUpRepository) {
-            return new SignUpUseCase(signUpRepository);
+        public SignUpUseCase signUpUseCase(SignUpRepository signUpRepository, UserRepository userRepository) {
+            return new SignUpUseCase(signUpRepository,userRepository);
         }
     }
 
