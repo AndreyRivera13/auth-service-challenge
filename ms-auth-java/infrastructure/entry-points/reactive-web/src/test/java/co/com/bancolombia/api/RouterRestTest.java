@@ -40,7 +40,7 @@ class RouterRestTest {
 
         webTestClient.post()
                 .uri("/api/v1/signup")
-                .contentType(MediaType.APPLICATION_JSON) // <- Agrega esta línea
+                .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .header("message-id", "123e4567-e89b-12d3-a456-426614174000")
                 .header("x-request-id", "x-request-id-test")

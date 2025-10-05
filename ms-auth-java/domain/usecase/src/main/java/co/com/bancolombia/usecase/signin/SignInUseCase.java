@@ -1,8 +1,6 @@
-// src/main/java/co/com/bancolombia/usecase/signin/SignInUseCase.java
 package co.com.bancolombia.usecase.signin;
 
 import co.com.bancolombia.model.signin.gateways.SignInRepository;
-import co.com.bancolombia.model.signup.gateways.SignUpRepository;
 import co.com.bancolombia.model.user.User;
 import co.com.bancolombia.model.session.Session;
 import co.com.bancolombia.model.contextdata.ContextData;

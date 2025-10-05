@@ -7,7 +7,6 @@ public class SignInRequest {
     private String email;
     private String password;
 
-    // Getters y setters
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
