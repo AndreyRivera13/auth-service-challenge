@@ -1,6 +1,6 @@
-// src/main/java/co/com/bancolombia/usecase/signup/SignUpUseCase.java
 package co.com.bancolombia.usecase.signup;
 
+import co.com.bancolombia.model.signup.gateways.SignUpRepository;
 import co.com.bancolombia.model.user.User;
 import co.com.bancolombia.model.contextdata.ContextData;
 import co.com.bancolombia.model.user.gateways.UserRepository;
@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
 public class SignUpUseCase {
+    private final SignUpRepository sinUpRepository;
     private final UserRepository userRepository;
     private static final Logger log = LoggerFactory.getLogger(SignUpUseCase.class);
     private static final Pattern EMAIL_REGEX = Pattern.compile("^[\\w-.]+@[\\w-]+\\.[a-zA-Z]{2,}$");
@@ -37,8 +38,10 @@ public class SignUpUseCase {
                     log.warn("Email ya registrado: {}", user.getEmail());
                     return Mono.error(new DomainError("EMAIL_ALREADY_EXISTS", "Email ya registrado", null, context));
                 })
-                .switchIfEmpty(userRepository.save(user)
-                        .doOnSuccess(u -> log.info("Usuario creado exitosamente: {}", user.getEmail()))
-                        .then());
+                .switchIfEmpty(Mono.defer(() ->
+                        sinUpRepository.save(user)
+                                .doOnSuccess(ignored -> log.info("Usuario creado exitosamente: {}", user.getEmail()))
+                                .then(Mono.<Object>empty())
+                ));
     }
 }

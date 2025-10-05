@@ -1,6 +1,7 @@
 package co.com.bancolombia.config;
 
-import co.com.bancolombia.model.session.gateways.SessionRepository;
+import co.com.bancolombia.model.signin.gateways.SignInRepository;
+import co.com.bancolombia.model.signup.gateways.SignUpRepository;
 import co.com.bancolombia.model.user.gateways.UserRepository;
 import co.com.bancolombia.usecase.signin.SignInUseCase;
 import co.com.bancolombia.usecase.signup.SignUpUseCase;
@@ -18,12 +19,12 @@ import org.springframework.context.annotation.FilterType;
 public class UseCasesConfig {
 
     @Bean
-    public SignInUseCase signInUseCase(UserRepository userRepository, SessionRepository sessionRepository) {
-        return new SignInUseCase(userRepository, sessionRepository);
+    public SignInUseCase signInUseCase(SignInRepository signInRepository, UserRepository userRepository) {
+        return new SignInUseCase(signInRepository,userRepository );
     }
 
     @Bean
-    public SignUpUseCase signUpUseCase(UserRepository userRepository) {
-        return new SignUpUseCase(userRepository);
+    public SignUpUseCase signUpUseCase(SignUpRepository signUpRepository, UserRepository userRepository) {
+        return new SignUpUseCase(signUpRepository,userRepository);
     }
 }
