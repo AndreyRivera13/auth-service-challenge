@@ -1,4 +1,3 @@
-// src/main/java/co/com/bancolombia/usecase/signup/SignUpUseCase.java
 package co.com.bancolombia.usecase.signup;
 
 import co.com.bancolombia.model.signup.gateways.SignUpRepository;
@@ -39,8 +38,10 @@ public class SignUpUseCase {
                     log.warn("Email ya registrado: {}", user.getEmail());
                     return Mono.error(new DomainError("EMAIL_ALREADY_EXISTS", "Email ya registrado", null, context));
                 })
-                .switchIfEmpty(sinUpRepository.save(user)
-                        .doOnSuccess(u -> log.info("Usuario creado exitosamente: {}", user.getEmail()))
-                        .then());
+                .switchIfEmpty(Mono.defer(() ->
+                        sinUpRepository.save(user)
+                                .doOnSuccess(ignored -> log.info("Usuario creado exitosamente: {}", user.getEmail()))
+                                .then(Mono.<Object>empty())
+                ));
     }
 }
