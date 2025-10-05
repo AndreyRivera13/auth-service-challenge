@@ -21,7 +21,7 @@ defmodule Authelixir.Infrastructure.EntryPoint.ApiRest do
   plug(:dispatch)
 
   forward(
-    "/api/health",
+    "/api/v1/health",
     to: PlugCheckup,
     init_opts:
       PlugCheckup.Options.new(
@@ -30,7 +30,7 @@ defmodule Authelixir.Infrastructure.EntryPoint.ApiRest do
       )
   )
 
-  get "/api/hello" do
+  get "/api/v1/hello" do
     build_response("Hello World", conn)
   end
 
