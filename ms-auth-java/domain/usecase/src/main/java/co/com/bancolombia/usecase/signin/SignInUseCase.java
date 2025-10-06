@@ -1,5 +1,6 @@
 package co.com.bancolombia.usecase.signin;
 
+import co.com.bancolombia.model.exception.model.CodeMessage;
 import co.com.bancolombia.model.signin.gateways.SignInRepository;
 import co.com.bancolombia.model.user.User;
 import co.com.bancolombia.model.session.Session;
@@ -22,18 +23,18 @@ public class SignInUseCase {
     public Mono<Session> execute(User user, ContextData context) {
         log.debug("Iniciando SignIn para email={}, context={}", user != null ? user.getEmail() : null, context);
         if (user == null || user.getEmail() == null || user.getPassword() == null) {
-            log.warn("Request mal formado: {}", user);
+            log.warn("Request mal formado: {}", user.getEmail());
             return Mono.error(new DomainError("MALFORMED_REQUEST", "Request inválido", null, context));
         }
         return userRepository.findByEmail(user.getEmail())
                 .switchIfEmpty(Mono.defer(() -> {
                     log.warn("Usuario no encontrado: {}", user.getEmail());
-                    return Mono.error(new DomainError("USER_NOT_FOUND", "Usuario no existe", null, context));
+                    return Mono.error(new DomainError(CodeMessage.USER_NOT_FOUND_CODE,CodeMessage.USER_NOT_EXISTS_MESSAGE, null, context));
                 }))
                 .flatMap(u -> {
                     if (!u.getPassword().equals(user.getPassword())) {
                         log.warn("Credenciales inválidas para email={}", user.getEmail());
-                        return Mono.error(new DomainError("INVALID_CREDENTIALS", "Credenciales inválidas", null, context));
+                        return Mono.error(new DomainError(CodeMessage.INVALID_CREDENTIALS_CODE, CodeMessage.INVALID_CREDENTIALS_MESSAGE, null, context));
                     }
                     String sessionId = UUID.randomUUID().toString();
                     Session session = new Session(sessionId, user.getEmail());

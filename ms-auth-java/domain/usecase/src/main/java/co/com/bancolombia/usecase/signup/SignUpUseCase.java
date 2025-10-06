@@ -1,5 +1,6 @@
 package co.com.bancolombia.usecase.signup;
 
+import co.com.bancolombia.model.exception.model.CodeMessage;
 import co.com.bancolombia.model.signup.gateways.SignUpRepository;
 import co.com.bancolombia.model.user.User;
 import co.com.bancolombia.model.contextdata.ContextData;
@@ -22,21 +23,21 @@ public class SignUpUseCase {
     public Mono<Object> execute(User user, ContextData context) {
         log.debug("Ejecutando signup con datos: user={}, context={}", user, context);
         if (user == null || user.getEmail() == null || user.getPassword() == null) {
-            log.warn("Request inválido: user={}, context={}", user, context);
-            return Mono.error(new DomainError("MALFORMED_REQUEST", "Request inválido", null, context));
+            log.warn("Request inválido: user={}, context={}", user.getEmail(), context);
+            return Mono.error(new DomainError(CodeMessage.MALFORMED_REQUEST_CODE,CodeMessage.REQUEST_INVALID_MESSAGE, null, context));
         }
         if (!EMAIL_REGEX.matcher(user.getEmail()).matches()) {
             log.warn("Email inválido: {}", user.getEmail());
-            return Mono.error(new DomainError("INVALID_EMAIL_FORMAT", "Email inválido", null, context));
+            return Mono.error(new DomainError(CodeMessage.INVALID_EMAIL_FORMAT_CODE, CodeMessage.INVALID_EMAIL_FORMAT_MESSAGE, null, context));
         }
         if (user.getPassword().length() < 8) {
             log.warn("Password débil para email: {}", user.getEmail());
-            return Mono.error(new DomainError("WEAK_PASSWORD", "Password débil", null, context));
+            return Mono.error(new DomainError(CodeMessage.WEAK_PASSWORD_CODE, CodeMessage.WEAK_PASSWORD_MESSAGE, null, context));
         }
         return userRepository.findByEmail(user.getEmail())
                 .flatMap(existing -> {
                     log.warn("Email ya registrado: {}", user.getEmail());
-                    return Mono.error(new DomainError("EMAIL_ALREADY_EXISTS", "Email ya registrado", null, context));
+                    return Mono.error(new DomainError(CodeMessage.EMAIL_ALREADY_EXISTS_CODE, CodeMessage.EMAIL_ALREADY_EXISTS_MESSAGE, null, context));
                 })
                 .switchIfEmpty(Mono.defer(() ->
                         sinUpRepository.save(user)
