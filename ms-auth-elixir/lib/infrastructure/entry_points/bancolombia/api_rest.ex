@@ -40,8 +40,8 @@ defmodule Authelixir.Infrastructure.EntryPoint.Bancolombia.ApiRest do
          password when is_binary(password) <- params["password"] do
       case Signup.execute(ctx, email, password, UserRepo, SignupRepo) do
         {:ok, :created} ->
-          mid = Map.get(ctx, :message_id, "")
-          xid = Map.get(ctx, :x_request_id) || Map.get(ctx, :request_id) || ""
+          mid = ctx.message_id
+          xid = ctx.x_request_id
 
           conn
           |> put_resp_header("message-id", mid)
@@ -70,8 +70,8 @@ defmodule Authelixir.Infrastructure.EntryPoint.Bancolombia.ApiRest do
       case Signin.execute(ctx, email, password, UserRepo, SessionRepo) do
         {:ok, session} ->
           body = Jason.encode!(%{"session_id" => session.session_id})
-          mid = Map.get(ctx, :message_id, "")
-          xid = Map.get(ctx, :x_request_id) || Map.get(ctx, :request_id) || ""
+          mid = ctx.message_id
+          xid = ctx.x_request_id
           conn
           |> put_resp_header("message-id", mid)
           |> put_resp_header("x-request-id", xid)
@@ -98,29 +98,17 @@ defmodule Authelixir.Infrastructure.EntryPoint.Bancolombia.ApiRest do
   # Helpers
 
   defp context_from(conn) do
-    message_id = get_req_header(conn, "message-id") |> List.first()
-    req_id = get_req_header(conn, "x-request-id") |> List.first()
-
-    # struct/2 ignora claves inexistentes y solo setea las válidas
-    ctx =
-      struct(ContextData, %{
-        message_id: message_id,
-        request_id: req_id,
-        x_request_id: req_id
-      })
-
-    {:ok, ctx}
+    mid = get_req_header(conn, "message-id") |> List.first()
+    xhdr = get_req_header(conn, "x-request-id") |> List.first()
+    xid = if is_binary(xhdr) and byte_size(xhdr) > 0, do: xhdr, else: mid
+    {:ok, ContextData.new(mid, xid)}
   end
 
   defp validate_headers_present(ctx) do
-    mid = Map.get(ctx, :message_id)
-    xid = Map.get(ctx, :x_request_id) || Map.get(ctx, :request_id)
+    mid = ctx.message_id
+    xid = ctx.x_request_id
 
-    if present?(mid) and present?(xid) and uuid?(mid) and uuid?(xid) do
-      :ok
-    else
-      {:error, AppException.new(:MALFORMED_REQUEST, "Headers de trazabilidad inválidos")}
-    end
+    if present?(mid) and present?(xid) and uuid?(mid) and uuid?(xid), do: :ok, else: {:error, AppException.new(:MALFORMED_REQUEST, "Headers de trazabilidad inválidos")}
   end
 
   # Rechaza claves no permitidas y exige campos requeridos
@@ -150,10 +138,9 @@ defmodule Authelixir.Infrastructure.EntryPoint.Bancolombia.ApiRest do
 
   defp send_error(conn, %AppException{} = e) do
     status = AppException.http_status(e)
-
-    msg_id = get_req_header(conn, "message-id") |> List.first() || ""
-    req_id = get_req_header(conn, "x-request-id") |> List.first() || ""
-
+    msg_id = get_req_header(conn, "message-id") |> List.first()
+    req_id = get_req_header(conn, "x-request-id") |> List.first()
+    xid = if is_binary(req_id) and byte_size(req_id) > 0, do: req_id, else: msg_id
     body =
       %{
         "error" => %{
@@ -162,15 +149,14 @@ defmodule Authelixir.Infrastructure.EntryPoint.Bancolombia.ApiRest do
           "details" => Map.get(e, :metadata, %{}),
           "correlation" => %{
             "message_id" => msg_id,
-            "x_request_id" => req_id
+            "x_request_id" => xid
           }
         }
       }
       |> Jason.encode!()
-
     conn
-    |> put_resp_header("message-id", msg_id)
-    |> put_resp_header("x-request-id", req_id)
+    |> put_resp_header("message-id", msg_id || "")
+    |> put_resp_header("x-request-id", xid || "")
     |> put_resp_content_type("application/json")
     |> send_resp(status, body)
   end
