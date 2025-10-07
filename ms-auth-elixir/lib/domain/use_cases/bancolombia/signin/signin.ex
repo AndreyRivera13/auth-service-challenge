@@ -1,4 +1,4 @@
-defmodule Authelixir.Domain.UseCase.Signin do
+defmodule Authelixir.Domain.UseCases.Bancolombia.Signin.Signin do
   @moduledoc """
   Caso de uso: Signin
 

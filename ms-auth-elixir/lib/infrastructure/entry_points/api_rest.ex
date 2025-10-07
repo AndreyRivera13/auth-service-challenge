@@ -1,63 +1,174 @@
 defmodule Authelixir.Infrastructure.EntryPoint.ApiRest do
-  @compile if Mix.env() == :test, do: :export_all
   @moduledoc """
-  Access point to the rest exposed services
+  API REST con Plug.Router
+  - POST /api/v1/signup -> 201 sin body
+  - POST /api/v1/signin -> 200 {"session_id": "uuid"}
+  Manejo de errores canónico y propagación de headers de trazabilidad.
   """
-  # alias Authelixir.Utils.DataTypeUtils
-  require Logger
+
   use Plug.Router
-  use Timex
+  require Logger
 
-  plug(CORSPlug,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    origin: [~r/.*/],
-    headers: ["Content-Type", "Accept", "User-Agent"]
-  )
+  alias Authelixir.Domain.Model.AppException
+  alias Authelixir.Domain.Model.ContextData
+  alias Authelixir.Domain.UseCase.Signup
+  alias Authelixir.Domain.UseCase.Signin
+  alias Authelixir.Infrastructure.Repository.{InMemoryUserRepository, InMemorySessionRepository}
 
-  plug(Plug.Logger, log: :debug)
-  plug(:match)
-  plug(Plug.Parsers, parsers: [:urlencoded, :json], json_decoder: Poison)
-  plug(Plug.Telemetry, event_prefix: [:authelixir, :plug])
-  plug(:dispatch)
+  plug Plug.Logger, log: :info
+  plug CORSPlug, origin: ["*"]
 
-  forward(
-    "/api/v1/health",
-    to: PlugCheckup,
-    init_opts:
-      PlugCheckup.Options.new(
-        json_encoder: Jason,
-        checks: Authelixir.Infrastructure.EntryPoint.HealthCheck.checks()
-      )
-  )
+  plug Plug.Parsers,
+    parsers: [:json],
+    pass: ["application/json"],
+    json_decoder: Jason
 
-  get "/api/v1/hello" do
-    build_response("Hello World", conn)
+  plug :match
+  plug :dispatch
+
+  get "/health" do
+    send_resp(conn, 200, "OK")
   end
 
-  def build_response(%{status: status, body: body}, conn) do
-    conn
-    |> put_resp_content_type("application/json")
-    |> send_resp(status, Poison.encode!(body))
+  post "/api/v1/signup" do
+    with {:ok, ctx} <- context_from(conn),
+         :ok <- validate_headers_present(ctx),
+         {:ok, params} <- strict_json(conn, ~w(email password)),
+         email when is_binary(email) <- params["email"],
+         password when is_binary(password) <- params["password"] do
+      case Signup.execute(ctx, email, password, InMemoryUserRepository) do
+        {:ok, :created} ->
+          mid = Map.get(ctx, :message_id, "")
+          xid = Map.get(ctx, :x_request_id) || Map.get(ctx, :request_id) || ""
+
+          conn
+          |> put_resp_header("message-id", mid)
+          |> put_resp_header("x-request-id", xid)
+          |> send_resp(201, "")
+
+        {:error, %AppException{} = e} ->
+          send_error(conn, e)
+      end
+    else
+      {:error, %AppException{} = e} ->
+        send_error(conn, e)
+
+      _ ->
+        e = AppException.new(:MALFORMED_REQUEST, "Request inválido")
+        send_error(conn, e)
+    end
   end
 
-  def build_response(response, conn), do: build_response(%{status: 200, body: response}, conn)
+  post "/api/v1/signin" do
+    with {:ok, ctx} <- context_from(conn),
+         :ok <- validate_headers_present(ctx),
+         {:ok, params} <- strict_json(conn, ~w(email password)),
+         email when is_binary(email) <- params["email"],
+         password when is_binary(password) <- params["password"] do
+      case Signin.execute(ctx, email, password, InMemoryUserRepository, InMemorySessionRepository) do
+        {:ok, session} ->
+          body = Jason.encode!(%{"session_id" => session.session_id})
+
+          mid = Map.get(ctx, :message_id, "")
+          xid = Map.get(ctx, :x_request_id) || Map.get(ctx, :request_id) || ""
+
+          conn
+          |> put_resp_header("message-id", mid)
+          |> put_resp_header("x-request-id", xid)
+          |> put_resp_content_type("application/json")
+          |> send_resp(200, body)
+
+        {:error, %AppException{} = e} ->
+          send_error(conn, e)
+      end
+    else
+      {:error, %AppException{} = e} ->
+        send_error(conn, e)
+
+      _ ->
+        e = AppException.new(:MALFORMED_REQUEST, "Request inválido")
+        send_error(conn, e)
+    end
+  end
 
   match _ do
+    send_resp(conn, 404, "Not found")
+  end
+
+  # Helpers
+
+  defp context_from(conn) do
+    message_id = get_req_header(conn, "message-id") |> List.first()
+    req_id = get_req_header(conn, "x-request-id") |> List.first()
+
+    # struct/2 ignora claves inexistentes y solo setea las válidas
+    ctx =
+      struct(ContextData, %{
+        message_id: message_id,
+        request_id: req_id,
+        x_request_id: req_id
+      })
+
+    {:ok, ctx}
+  end
+
+  defp validate_headers_present(ctx) do
+    mid = Map.get(ctx, :message_id)
+    xid = Map.get(ctx, :x_request_id) || Map.get(ctx, :request_id)
+
+    if present?(mid) and present?(xid) and uuid?(mid) and uuid?(xid) do
+      :ok
+    else
+      {:error, AppException.new(:MALFORMED_REQUEST, "Headers de trazabilidad inválidos")}
+    end
+  end
+
+  defp strict_json(conn, allowed_keys) do
+    case conn.body_params do
+      %{} = params ->
+        filtered = Map.take(params, allowed_keys)
+
+        if Enum.any?(allowed_keys, fn k -> Map.get(filtered, k) in [nil, ""] end) do
+          {:error, AppException.new(:MALFORMED_REQUEST, "Campos obligatorios faltantes")}
+        else
+          {:ok, filtered}
+        end
+
+      _ ->
+        {:error, AppException.new(:MALFORMED_REQUEST, "JSON inválido")}
+    end
+  end
+
+  defp present?(v), do: is_binary(v) and byte_size(v) > 0
+
+  @uuid_regex ~r/^[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[1-5][0-9a-fA-F]{3}\-[89abAB][0-9a-fA-F]{3}\-[0-9a-fA-F]{12}$/
+  defp uuid?(nil), do: false
+  defp uuid?(v) when is_binary(v), do: Regex.match?(@uuid_regex, v)
+
+  defp send_error(conn, %AppException{} = e) do
+    status = AppException.http_status(e)
+
+    msg_id = get_req_header(conn, "message-id") |> List.first() || ""
+    req_id = get_req_header(conn, "x-request-id") |> List.first() || ""
+
+    body =
+      %{
+        "error" => %{
+          "code" => e.code |> to_string(),
+          "message" => e.message,
+          "details" => Map.get(e, :metadata, %{}),
+          "correlation" => %{
+            "message_id" => msg_id,
+            "x_request_id" => req_id
+          }
+        }
+      }
+      |> Jason.encode!()
+
     conn
-    |> handle_not_found(Logger.level())
-  end
-
-  # defp build_bad_request_error_response(response, conn) do
-  #   build_response(%{status: 400, body: response}, conn)
-  # end
-
-  defp handle_not_found(conn, :debug) do
-    %{request_path: path} = conn
-    body = Poison.encode!(%{status: 404, path: path})
-    send_resp(conn, 404, body)
-  end
-
-  defp handle_not_found(conn, _level) do
-    send_resp(conn, 404, "")
+    |> put_resp_header("message-id", msg_id)
+    |> put_resp_header("x-request-id", req_id)
+    |> put_resp_content_type("application/json")
+    |> send_resp(status, body)
   end
 end

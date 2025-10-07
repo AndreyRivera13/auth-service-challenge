@@ -1,4 +1,4 @@
-defmodule Authelixir.Domain.UseCase.Signup do
+defmodule Authelixir.Domain.UseCases.Bancolombia.Signup.Signup do
   @moduledoc """
   Signup
     Reglas:
