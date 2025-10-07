@@ -2,3 +2,5 @@
 21:37:42.704 [debug] handled notification client -> server $/cancelRequest in 6ms
 
 21:37:43.642 [debug] handled notification client -> server $/cancelRequest in 1ms
+
+21:38:04.448 id=2200 [debug] handled request client -> server textDocument/codeAction in 2ms
