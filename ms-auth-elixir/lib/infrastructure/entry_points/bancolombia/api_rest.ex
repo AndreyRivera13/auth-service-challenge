@@ -28,7 +28,7 @@ defmodule Authelixir.Infrastructure.EntryPoint.Bancolombia.ApiRest do
   plug :match
   plug :dispatch
 
-  get "/health" do
+  get "/api/v1/health" do
     send_resp(conn, 200, "OK")
   end
 
