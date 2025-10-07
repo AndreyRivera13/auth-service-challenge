@@ -108,7 +108,9 @@ defmodule Authelixir.Utils.DataTypeUtilsTest do
   end
 
   test "converts monotonic time in native units to milliseconds" do
-    assert DataTypeUtils.monotonic_time_to_milliseconds(1_000_000) == 1
+    expected = System.convert_time_unit(1_000_000, :native, :millisecond)
+
+    assert DataTypeUtils.monotonic_time_to_milliseconds(1_000_000) == expected
   end
 
   test "returns different numbers on subsequent calls" do
