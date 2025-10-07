@@ -3,6 +3,8 @@ defmodule Authelixir.Domain.Model.Bancolombia.User.User do
   User
   """
 
+  alias Authelixir.Domain.Model.Bancolombia.Exception.AppException
+
   defstruct [:email, :password, :name]
 
   @type t :: %__MODULE__{
@@ -14,7 +16,7 @@ defmodule Authelixir.Domain.Model.Bancolombia.User.User do
   @email_regex ~r/^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
   @spec build(String.t(), String.t(), String.t()) ::
-          {:ok, t()} | {:error, Authelixir.Domain.Model.AppException.t()}
+          {:ok, t()} | {:error, AppException.t()}
   def build(email, password, name) do
     with :ok <- validate_email(email),
          :ok <- validate_password(password),
@@ -42,6 +44,5 @@ defmodule Authelixir.Domain.Model.Bancolombia.User.User do
   def validate_password(_), do: error(:WEAK_PASSWORD, "Weak password")
   def validate_name(_), do: error(:INVALID_NAME, "Invalid name")
 
-  defp error(code, msg),
-    do: {:error, Authelixir.Domain.Model.AppException.new(code, msg)}
+  defp error(code, msg), do: {:error, AppException.new(code, msg)}
 end

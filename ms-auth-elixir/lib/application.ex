@@ -5,6 +5,7 @@ defmodule Authelixir.Application do
 
   alias Authelixir.Infrastructure.EntryPoint.Bancolombia.ApiRest
   alias Authelixir.Config.{AppConfig, ConfigHolder}
+  alias Authelixir.Infrastructure.Adapters.Bancolombia.MemoryPersistence.Shared.MemoryStoreOwner
 
   use Application
   require Logger
@@ -27,7 +28,8 @@ defmodule Authelixir.Application do
 
   def all_env_children(%AppConfig{} = config) do
     [
-      {ConfigHolder, config}
+      {ConfigHolder, config},
+      {MemoryStoreOwner, []}
     ]
   end
 

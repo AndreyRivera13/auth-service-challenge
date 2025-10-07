@@ -7,6 +7,17 @@ defmodule Authelixir.Infrastructure.Adapters.Bancolombia.MemoryPersistence.Share
   @users_table :ms_auth_users
   @sessions_table :ms_auth_sessions
 
+  @doc """
+  Crea (si no existen) las ETS y queda el proceso llamante como dueño.
+  Debe invocarse desde un proceso supervisado y de vida larga.
+  """
+  @spec init_tables() :: :ok
+  def init_tables do
+    create_if_needed(@users_table)
+    create_if_needed(@sessions_table)
+    :ok
+  end
+
   # Usuarios
 
   @spec put_user(User.t()) :: {:ok, User.t()} | {:error, :EMAIL_ALREADY_EXISTS}

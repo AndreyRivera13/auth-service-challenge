@@ -3,6 +3,7 @@ defmodule Authelixir.Domain.Behaviours.SignInBehaviour do
   SignInBehaviour
   """
 
-  @callback save(Session.t()) :: {:ok, Session.t()} | {:error, term()}
+  alias Authelixir.Domain.Model.Bancolombia.Session.Session
 
+  @callback save(Session.t()) :: {:ok, Session.t()} | {:error, term()}
 end
