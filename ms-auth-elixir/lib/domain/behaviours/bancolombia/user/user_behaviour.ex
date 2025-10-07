@@ -1,11 +1,10 @@
 defmodule Authelixir.Domain.Behaviours.UserBehaviour do
-
- @moduledoc """
+  @moduledoc """
   UserBehaviour
   Puerto de dominio para persistencia de usuarios.
   """
 
-  alias Authelixir.Domain.Model.User
+  alias Authelixir.Domain.Model.Bancolombia.User.User
 
   @callback find_by_email(String.t()) :: {:ok, User.t()} | :not_found | {:error, term()}
 end

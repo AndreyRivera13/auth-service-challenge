@@ -1,74 +1,62 @@
 defmodule Authelixir.Domain.UseCases.Bancolombia.Signin.Signin do
-  @moduledoc """
-  Caso de uso: Signin
-
-  Reglas:
-  - Buscar usuario por email.
-  - Si no existe -> USER_NOT_FOUND.
-  - Comparar password texto plano (NO hacer hash aquí).
-  - Si no coincide -> INVALID_CREDENTIALS.
-  - Crear session_id (UUID) y persistir sesión en memoria.
-  - Retornar {:ok, session} sin exponer password.
-  - Errores se retornan como {:error, %AppException{}} (un solo tipo de error de dominio).
-  """
+  @moduledoc "Caso de uso SignIn con modelo Signin (User + Session)."
 
   alias Authelixir.Domain.Model.Bancolombia.Exception.AppException
+  alias Authelixir.Domain.Model.Bancolombia.Contextdata.ContextData
+  alias Authelixir.Domain.Model.Bancolombia.Signin.Signin, as: SigninModel
   alias Authelixir.Domain.Model.Bancolombia.Session.Session
   alias Authelixir.Domain.Model.Bancolombia.User.User
-  alias Authelixir.Domain.Model.Bancolombia.Contextdata.ContextData
+
+  import Bitwise
 
   @type context :: ContextData.t()
-  @type email :: String.t()
-  @type password :: String.t()
   @type user_repo :: module()
   @type session_repo :: module()
 
-  @spec execute(context, email, password, user_repo, session_repo) ::
+  @spec execute(context, SigninModel.t(), user_repo, session_repo) ::
           {:ok, Session.t()} | {:error, AppException.t()}
-  def execute(%ContextData{} = ctx, email, password, user_repo, session_repo) do
-    with {:ok, %User{} = user} <- fetch_user(ctx, email, user_repo),
-         :ok <- validate_password(user, password),
-         {:ok, %Session{} = session} <- create_and_store_session(ctx, user, session_repo) do
+  def execute(%ContextData{} = _ctx, %SigninModel{user: %User{email: email, password: given_pw}}, user_repo, session_repo) do
+    with {:ok, %User{password: stored_pw}} <- fetch_user(user_repo, email),
+         :ok <- compare_passwords(stored_pw, given_pw),
+         {:ok, %Session{} = session} <- create_and_store_session(session_repo, email) do
       {:ok, session}
     else
       {:error, %AppException{} = e} -> {:error, e}
-      {:error, reason} when is_atom(reason) -> {:error, AppException.new(reason)}
+      :not_found -> {:error, AppException.new(:USER_NOT_FOUND, "User not found", nil)}
+      other when is_atom(other) -> {:error, AppException.new(other, nil, nil)}
+      _ -> {:error, AppException.new(:UNEXPECTED_ERROR, "Unexpected error", nil)}
     end
   rescue
-    e ->
-      {:error, AppException.new(:UNEXPECTED_ERROR, "Unexpected error: #{inspect(e.__struct__)}")}
+    _e -> {:error, AppException.new(:UNEXPECTED_ERROR, "Unexpected error", nil)}
   end
 
-  # ---- Privadas ----
+  # Privadas
 
-  defp fetch_user(ctx, email, repo) do
-    case repo.get_by_email(ctx, email) do
+  defp fetch_user(user_repo, email) do
+    case user_repo.find_by_email(email) do
       {:ok, %User{} = u} -> {:ok, u}
-      {:error, :USER_NOT_FOUND} -> {:error, AppException.new(:USER_NOT_FOUND, "User not found")}
-      {:error, %AppException{} = e} -> {:error, e}
-      _ -> {:error, AppException.new(:USER_NOT_FOUND, "User not found")}
+      :not_found -> :not_found
+      {:error, _} -> {:error, AppException.new(:UNEXPECTED_ERROR, "Cannot fetch user", nil)}
     end
   end
 
-  defp validate_password(%User{password: stored}, given) when is_binary(given) do
-    if stored == given do
-      :ok
-    else
-      {:error, AppException.new(:INVALID_CREDENTIALS, "Invalid credentials")}
-    end
-  end
+  defp compare_passwords(stored, given) when is_binary(given) and stored == given, do: :ok
+  defp compare_passwords(_stored, _given), do: {:error, AppException.new(:INVALID_CREDENTIALS, "Invalid credentials", nil)}
 
-  defp validate_password(_user, _pw),
-    do: {:error, AppException.new(:INVALID_CREDENTIALS, "Invalid credentials")}
+  defp create_and_store_session(session_repo, email) do
+    session = %Session{session_id: uuid_v4(), email: String.downcase(email)}
 
-  defp create_and_store_session(ctx, %User{email: email}, repo) do
-    session = Session.new(email)
-
-    case repo.save(ctx, session) do
+    case session_repo.save(session) do
       {:ok, %Session{} = s} -> {:ok, s}
-      {:error, %AppException{} = e} -> {:error, e}
-      {:error, reason} when is_atom(reason) -> {:error, AppException.new(reason)}
-      _ -> {:error, AppException.new(:UNEXPECTED_ERROR, "Cannot persist session")}
+      {:error, _} -> {:error, AppException.new(:UNEXPECTED_ERROR, "Cannot persist session", nil)}
     end
+  end
+
+  # UUID v4
+  defp uuid_v4 do
+    <<a::32, b::16, c::16, d::16, e::48>> = :crypto.strong_rand_bytes(16)
+    c = (c &&& 0x0FFF) ||| 0x4000
+    d = (d &&& 0x3FFF) ||| 0x8000
+    :io_lib.format("~8.16.0b-~4.16.0b-~4.16.0b-~4.16.0b-~12.16.0b", [a, b, c, d, e]) |> IO.iodata_to_binary()
   end
 end
