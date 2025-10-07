@@ -1,4 +1,4 @@
-defmodule Authelixir.Domain.Model.User do
+defmodule Authelixir.Domain.Model.Bancolombia.User.User do
   @moduledoc """
   User
   """

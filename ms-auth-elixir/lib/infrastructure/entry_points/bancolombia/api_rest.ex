@@ -1,4 +1,4 @@
-defmodule Authelixir.Infrastructure.EntryPoint.ApiRest do
+defmodule Authelixir.Infrastructure.EntryPoint.Bancolombia.ApiRest do
   @moduledoc """
   API REST con Plug.Router
   - POST /api/v1/signup -> 201 sin body
@@ -9,10 +9,10 @@ defmodule Authelixir.Infrastructure.EntryPoint.ApiRest do
   use Plug.Router
   require Logger
 
-  alias Authelixir.Domain.Model.AppException
-  alias Authelixir.Domain.Model.ContextData
-  alias Authelixir.Domain.UseCase.Signup
-  alias Authelixir.Domain.UseCase.Signin
+  alias Authelixir.Domain.Model.Bancolombia.Exception.AppException
+  alias Authelixir.Domain.Model.Bancolombia.Contextdata.ContextData
+  alias Authelixir.Domain.UseCase.Bancolombia.Signup.Signup
+  alias Authelixir.Domain.UseCase.Bancolombia.Signin.Signin
   alias Authelixir.Infrastructure.Repository.{InMemoryUserRepository, InMemorySessionRepository}
 
   plug Plug.Logger, log: :info

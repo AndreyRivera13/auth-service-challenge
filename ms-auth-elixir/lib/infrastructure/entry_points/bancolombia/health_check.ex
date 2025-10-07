@@ -1,4 +1,4 @@
-defmodule Authelixir.Infrastructure.EntryPoint.HealthCheck do
+defmodule Authelixir.Infrastructure.EntryPoint.Bancolombia.HealthCheck do
   @moduledoc """
   Authelixir health check
   """

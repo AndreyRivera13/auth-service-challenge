@@ -9,7 +9,9 @@ defmodule Authelixir.Domain.UseCases.Bancolombia.Signup.Signup do
   - Errores se retornan como {:error, %AppException{}}.
   """
 
-  alias Authelixir.Domain.Model.{AppException, User, ContextData}
+  alias Authelixir.Domain.Model.Bancolombia.Exception.AppException
+  alias Authelixir.Domain.Model.Bancolombia.User.User
+  alias Authelixir.Domain.Model.Bancolombia.Contextdata.ContextData
 
   @type context :: ContextData.t()
   @type email :: String.t()

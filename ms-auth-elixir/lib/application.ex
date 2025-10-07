@@ -3,7 +3,7 @@ defmodule Authelixir.Application do
   Authelixir application
   """
 
-  alias Authelixir.Infrastructure.EntryPoint.ApiRest
+  alias Authelixir.Infrastructure.EntryPoint.Bancolombia.ApiRest
   alias Authelixir.Config.{AppConfig, ConfigHolder}
 
   use Application
