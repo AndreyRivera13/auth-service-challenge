@@ -1,4 +1,4 @@
-package co.com.bancolombia.model.exception;
+package co.com.bancolombia.model.shared.common.exception;
 
 public class BusinessException extends RuntimeException {
     private final String code;

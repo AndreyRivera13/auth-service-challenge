@@ -1,4 +1,4 @@
-package co.com.bancolombia.model.contextdata;
+package co.com.bancolombia.model.shared.cqrs;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

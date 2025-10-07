@@ -1,4 +1,4 @@
-package co.com.bancolombia.model.exception.model;
+package co.com.bancolombia.model.shared.common.exception.model;
 
 public class CodeMessage {
 

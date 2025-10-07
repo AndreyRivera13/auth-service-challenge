@@ -1,4 +1,4 @@
-defmodule Authelixir.Domain.Model.Bancolombia.Contextdata.ContextData do
+defmodule Authelixir.Domain.Model.Bancolombia.Shared.Crqs.Contextdata.ContextData do
   @moduledoc """
   ContextData
   """

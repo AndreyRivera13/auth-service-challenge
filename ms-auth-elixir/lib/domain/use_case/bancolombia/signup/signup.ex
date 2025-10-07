@@ -1,8 +1,8 @@
-defmodule Authelixir.Domain.UseCases.Bancolombia.Signup.Signup do
+defmodule Authelixir.Domain.UseCase.Bancolombia.Signup.Signup do
   @moduledoc "Caso de uso SignUp con modelo Signup (envuelve User)."
 
-  alias Authelixir.Domain.Model.Bancolombia.Exception.AppException
-  alias Authelixir.Domain.Model.Bancolombia.Contextdata.ContextData
+  alias Authelixir.Domain.Model.Bancolombia.Shared.Common.Exception.AppException
+  alias Authelixir.Domain.Model.Bancolombia.Shared.Crqs.Contextdata.ContextData
   alias Authelixir.Domain.Model.Bancolombia.Signup.Signup, as: SignupModel
   alias Authelixir.Domain.Model.Bancolombia.User.User
 
@@ -11,6 +11,14 @@ defmodule Authelixir.Domain.UseCases.Bancolombia.Signup.Signup do
   @type context :: ContextData.t()
   @type user_repo :: module()
   @type signup_repo :: module()
+
+  @spec execute(context, String.t(), String.t(), user_repo, signup_repo) ::
+          {:ok, :created} | {:error, AppException.t()}
+  def execute(%ContextData{} = ctx, email, password, user_repo, signup_repo)
+      when is_binary(email) and is_binary(password) do
+    model = %SignupModel{user: %User{email: email, password: password, name: nil}}
+    execute(ctx, model, user_repo, signup_repo)
+  end
 
   @spec execute(context, SignupModel.t(), user_repo, signup_repo) ::
           {:ok, :created} | {:error, AppException.t()}

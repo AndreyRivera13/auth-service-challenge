@@ -1,4 +1,4 @@
-defmodule Authelixir.Domain.Model.Bancolombia.Exception.AppException do
+defmodule Authelixir.Domain.Model.Bancolombia.Shared.Common.Exception.AppException do
   @moduledoc """
   Único tipo de error de dominio.
   """
