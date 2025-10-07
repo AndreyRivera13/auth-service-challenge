@@ -3,7 +3,7 @@ defmodule Authelixir.Domain.Model.Bancolombia.User.User do
   User
   """
 
-  alias Authelixir.Domain.Model.Bancolombia.Exception.AppException
+  alias Authelixir.Domain.Model.Bancolombia.Shared.Common.Exception.AppException
 
   defstruct [:email, :password, :name]
 

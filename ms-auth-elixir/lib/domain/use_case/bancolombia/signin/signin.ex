@@ -1,8 +1,8 @@
-defmodule Authelixir.Domain.UseCases.Bancolombia.Signin.Signin do
+defmodule Authelixir.Domain.UseCase.Bancolombia.Signin.Signin do
   @moduledoc "Caso de uso SignIn con modelo Signin (User + Session)."
 
-  alias Authelixir.Domain.Model.Bancolombia.Exception.AppException
-  alias Authelixir.Domain.Model.Bancolombia.Contextdata.ContextData
+  alias Authelixir.Domain.Model.Bancolombia.Shared.Common.Exception.AppException
+  alias Authelixir.Domain.Model.Bancolombia.Shared.Crqs.Contextdata.ContextData
   alias Authelixir.Domain.Model.Bancolombia.Signin.Signin, as: SigninModel
   alias Authelixir.Domain.Model.Bancolombia.Session.Session
   alias Authelixir.Domain.Model.Bancolombia.User.User
@@ -12,6 +12,14 @@ defmodule Authelixir.Domain.UseCases.Bancolombia.Signin.Signin do
   @type context :: ContextData.t()
   @type user_repo :: module()
   @type session_repo :: module()
+
+  @spec execute(context, String.t(), String.t(), user_repo, session_repo) ::
+          {:ok, Session.t()} | {:error, AppException.t()}
+  def execute(%ContextData{} = ctx, email, password, user_repo, session_repo)
+      when is_binary(email) and is_binary(password) do
+    model = %SigninModel{user: %User{email: email, password: password}}
+    execute(ctx, model, user_repo, session_repo)
+  end
 
   @spec execute(context, SigninModel.t(), user_repo, session_repo) ::
           {:ok, Session.t()} | {:error, AppException.t()}

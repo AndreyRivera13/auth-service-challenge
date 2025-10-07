@@ -1,5 +1,5 @@
-package co.com.bancolombia.model.exception;
-import co.com.bancolombia.model.contextdata.ContextData;
+package co.com.bancolombia.model.shared.common.exception;
+import co.com.bancolombia.model.shared.cqrs.ContextData;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

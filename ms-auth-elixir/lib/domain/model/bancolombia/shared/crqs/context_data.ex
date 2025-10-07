@@ -1,21 +1,20 @@
-defmodule Authelixir.Domain.Model.Bancolombia.Contextdata.ContextData do
-  @moduledoc """
-  ContextData
-  """
+defmodule Authelixir.Domain.Model.Bancolombia.Shared.Crqs.Contextdata.ContextData do
+  @moduledoc "Contexto de trazabilidad."
 
-  defstruct [:message_id, :request_id, :timestamp]
+  @enforce_keys [:message_id, :x_request_id]
+  defstruct [:message_id, :x_request_id, :timestamp]
 
   @type t :: %__MODULE__{
           message_id: String.t(),
-          request_id: String.t(),
+          x_request_id: String.t(),
           timestamp: DateTime.t()
         }
 
   @spec new(String.t(), String.t()) :: t()
-  def new(message_id, request_id) do
+  def new(message_id, x_request_id) do
     %__MODULE__{
       message_id: message_id,
-      request_id: request_id,
+      x_request_id: x_request_id,
       timestamp: DateTime.utc_now()
     }
   end
@@ -24,11 +23,12 @@ defmodule Authelixir.Domain.Model.Bancolombia.Contextdata.ContextData do
   def put(%__MODULE__{} = ctx, kvs) when is_list(kvs) do
     Enum.reduce(kvs, ctx, fn
       {:message_id, v}, acc -> %{acc | message_id: v}
-      {:request_id, v}, acc -> %{acc | request_id: v}
+      {:x_request_id, v}, acc -> %{acc | x_request_id: v}
       _, acc -> acc
     end)
   end
 end
+
 defmodule Authelixir.Domain.Model.ContextData do
   @moduledoc """
   Contexto de trazabilidad que viaja por todas las capas.

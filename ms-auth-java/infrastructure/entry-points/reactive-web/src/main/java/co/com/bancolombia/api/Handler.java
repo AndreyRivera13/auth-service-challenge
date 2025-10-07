@@ -1,7 +1,7 @@
 package co.com.bancolombia.api;
 
 import co.com.bancolombia.filter.HeadersValidation;
-import co.com.bancolombia.model.contextdata.ContextData;
+import co.com.bancolombia.model.shared.cqrs.ContextData;
 import co.com.bancolombia.model.user.User;
 import co.com.bancolombia.usecase.signin.SignInUseCase;
 import co.com.bancolombia.usecase.signup.SignUpUseCase;

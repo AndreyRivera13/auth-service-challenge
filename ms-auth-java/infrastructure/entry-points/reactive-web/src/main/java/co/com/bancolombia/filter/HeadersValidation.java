@@ -1,6 +1,6 @@
 package co.com.bancolombia.filter;
 
-import co.com.bancolombia.model.exception.AppException;
+import co.com.bancolombia.model.shared.common.exception.AppException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import reactor.core.publisher.Mono;

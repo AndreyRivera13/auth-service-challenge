@@ -1,11 +1,11 @@
 package co.com.bancolombia.usecase.signup;
 
-import co.com.bancolombia.model.exception.model.CodeMessage;
+import co.com.bancolombia.model.shared.common.exception.model.CodeMessage;
 import co.com.bancolombia.model.signup.gateways.SignUpRepository;
 import co.com.bancolombia.model.user.User;
-import co.com.bancolombia.model.contextdata.ContextData;
+import co.com.bancolombia.model.shared.cqrs.ContextData;
 import co.com.bancolombia.model.user.gateways.UserRepository;
-import co.com.bancolombia.model.exception.DomainError;
+import co.com.bancolombia.model.shared.common.exception.DomainError;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

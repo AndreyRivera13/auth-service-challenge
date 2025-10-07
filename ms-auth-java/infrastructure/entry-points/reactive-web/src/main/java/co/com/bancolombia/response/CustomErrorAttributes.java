@@ -1,8 +1,8 @@
 package co.com.bancolombia.response;
 
-import co.com.bancolombia.model.contextdata.ContextData;
-import co.com.bancolombia.model.exception.AppException;
-import co.com.bancolombia.model.exception.DomainError;
+import co.com.bancolombia.model.shared.cqrs.ContextData;
+import co.com.bancolombia.model.shared.common.exception.AppException;
+import co.com.bancolombia.model.shared.common.exception.DomainError;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.reactive.error.DefaultErrorAttributes;
 import org.springframework.http.HttpStatus;

@@ -1,6 +1,6 @@
 package co.com.bancolombia.usecase.signup;
 
-import co.com.bancolombia.model.exception.DomainError;
+import co.com.bancolombia.model.shared.common.exception.DomainError;
 import co.com.bancolombia.model.signup.gateways.SignUpRepository;
 import co.com.bancolombia.model.user.User;
 import co.com.bancolombia.model.user.gateways.UserRepository;

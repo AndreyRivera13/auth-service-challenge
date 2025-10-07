@@ -9,11 +9,13 @@ defmodule Authelixir.Infrastructure.EntryPoint.Bancolombia.ApiRest do
   use Plug.Router
   require Logger
 
-  alias Authelixir.Domain.Model.Bancolombia.Exception.AppException
-  alias Authelixir.Domain.Model.Bancolombia.Contextdata.ContextData
+  alias Authelixir.Domain.Model.Bancolombia.Shared.Common.Exception.AppException
+  alias Authelixir.Domain.Model.Bancolombia.Shared.Crqs.Contextdata.ContextData
   alias Authelixir.Domain.UseCase.Bancolombia.Signup.Signup
   alias Authelixir.Domain.UseCase.Bancolombia.Signin.Signin
-  alias Authelixir.Infrastructure.Repository.{InMemoryUserRepository, InMemorySessionRepository}
+  alias Authelixir.Infrastructure.Adapters.Bancolombia.MemoryPersistence.Useradapter.UserAdapterImpl, as: UserRepo
+  alias Authelixir.Infrastructure.Adapters.Bancolombia.MemoryPersistence.SignupAdapter.SignUpAdapterImpl, as: SignupRepo
+  alias Authelixir.Infrastructure.Adapters.Bancolombia.MemoryPersistence.Signinadapter.SignInAdapterImpl, as: SessionRepo
 
   plug Plug.Logger, log: :info
   plug CORSPlug, origin: ["*"]
@@ -26,20 +28,20 @@ defmodule Authelixir.Infrastructure.EntryPoint.Bancolombia.ApiRest do
   plug :match
   plug :dispatch
 
-  get "/health" do
+  get "/api/v1/health" do
     send_resp(conn, 200, "OK")
   end
 
   post "/api/v1/signup" do
     with {:ok, ctx} <- context_from(conn),
          :ok <- validate_headers_present(ctx),
-         {:ok, params} <- strict_json(conn, ~w(email password)),
+         {:ok, params} <- strict_json(conn, ~w(email password name), ~w(email password)),
          email when is_binary(email) <- params["email"],
          password when is_binary(password) <- params["password"] do
-      case Signup.execute(ctx, email, password, InMemoryUserRepository) do
+      case Signup.execute(ctx, email, password, UserRepo, SignupRepo) do
         {:ok, :created} ->
-          mid = Map.get(ctx, :message_id, "")
-          xid = Map.get(ctx, :x_request_id) || Map.get(ctx, :request_id) || ""
+          mid = ctx.message_id
+          xid = ctx.x_request_id
 
           conn
           |> put_resp_header("message-id", mid)
@@ -62,16 +64,14 @@ defmodule Authelixir.Infrastructure.EntryPoint.Bancolombia.ApiRest do
   post "/api/v1/signin" do
     with {:ok, ctx} <- context_from(conn),
          :ok <- validate_headers_present(ctx),
-         {:ok, params} <- strict_json(conn, ~w(email password)),
+         {:ok, params} <- strict_json(conn, ~w(email password), ~w(email password)),
          email when is_binary(email) <- params["email"],
          password when is_binary(password) <- params["password"] do
-      case Signin.execute(ctx, email, password, InMemoryUserRepository, InMemorySessionRepository) do
+      case Signin.execute(ctx, email, password, UserRepo, SessionRepo) do
         {:ok, session} ->
           body = Jason.encode!(%{"session_id" => session.session_id})
-
-          mid = Map.get(ctx, :message_id, "")
-          xid = Map.get(ctx, :x_request_id) || Map.get(ctx, :request_id) || ""
-
+          mid = ctx.message_id
+          xid = ctx.x_request_id
           conn
           |> put_resp_header("message-id", mid)
           |> put_resp_header("x-request-id", xid)
@@ -98,42 +98,33 @@ defmodule Authelixir.Infrastructure.EntryPoint.Bancolombia.ApiRest do
   # Helpers
 
   defp context_from(conn) do
-    message_id = get_req_header(conn, "message-id") |> List.first()
-    req_id = get_req_header(conn, "x-request-id") |> List.first()
-
-    # struct/2 ignora claves inexistentes y solo setea las válidas
-    ctx =
-      struct(ContextData, %{
-        message_id: message_id,
-        request_id: req_id,
-        x_request_id: req_id
-      })
-
-    {:ok, ctx}
+    mid = get_req_header(conn, "message-id") |> List.first()
+    xhdr = get_req_header(conn, "x-request-id") |> List.first()
+    xid = if is_binary(xhdr) and byte_size(xhdr) > 0, do: xhdr, else: mid
+    {:ok, ContextData.new(mid, xid)}
   end
 
   defp validate_headers_present(ctx) do
-    mid = Map.get(ctx, :message_id)
-    xid = Map.get(ctx, :x_request_id) || Map.get(ctx, :request_id)
+    mid = ctx.message_id
+    xid = ctx.x_request_id
 
-    if present?(mid) and present?(xid) and uuid?(mid) and uuid?(xid) do
-      :ok
-    else
-      {:error, AppException.new(:MALFORMED_REQUEST, "Headers de trazabilidad inválidos")}
-    end
+    if present?(mid) and present?(xid) and uuid?(mid) and uuid?(xid), do: :ok, else: {:error, AppException.new(:MALFORMED_REQUEST, "Headers de trazabilidad inválidos")}
   end
 
-  defp strict_json(conn, allowed_keys) do
+  # Rechaza claves no permitidas y exige campos requeridos
+  defp strict_json(conn, allowed_keys, required_keys) do
     case conn.body_params do
       %{} = params ->
-        filtered = Map.take(params, allowed_keys)
-
-        if Enum.any?(allowed_keys, fn k -> Map.get(filtered, k) in [nil, ""] end) do
-          {:error, AppException.new(:MALFORMED_REQUEST, "Campos obligatorios faltantes")}
-        else
-          {:ok, filtered}
+        keys = Map.keys(params)
+        unknown = Enum.filter(keys, fn k -> not (k in allowed_keys) end)
+        cond do
+          unknown != [] ->
+            {:error, AppException.new(:MALFORMED_REQUEST, "Campos no permitidos: #{Enum.join(unknown, ", ")}")}
+          Enum.any?(required_keys, fn k -> Map.get(params, k) in [nil, ""] end) ->
+            {:error, AppException.new(:MALFORMED_REQUEST, "Campos obligatorios faltantes")}
+          true ->
+            {:ok, Map.take(params, allowed_keys)}
         end
-
       _ ->
         {:error, AppException.new(:MALFORMED_REQUEST, "JSON inválido")}
     end
@@ -147,10 +138,9 @@ defmodule Authelixir.Infrastructure.EntryPoint.Bancolombia.ApiRest do
 
   defp send_error(conn, %AppException{} = e) do
     status = AppException.http_status(e)
-
-    msg_id = get_req_header(conn, "message-id") |> List.first() || ""
-    req_id = get_req_header(conn, "x-request-id") |> List.first() || ""
-
+    msg_id = get_req_header(conn, "message-id") |> List.first()
+    req_id = get_req_header(conn, "x-request-id") |> List.first()
+    xid = if is_binary(req_id) and byte_size(req_id) > 0, do: req_id, else: msg_id
     body =
       %{
         "error" => %{
@@ -159,15 +149,14 @@ defmodule Authelixir.Infrastructure.EntryPoint.Bancolombia.ApiRest do
           "details" => Map.get(e, :metadata, %{}),
           "correlation" => %{
             "message_id" => msg_id,
-            "x_request_id" => req_id
+            "x_request_id" => xid
           }
         }
       }
       |> Jason.encode!()
-
     conn
-    |> put_resp_header("message-id", msg_id)
-    |> put_resp_header("x-request-id", req_id)
+    |> put_resp_header("message-id", msg_id || "")
+    |> put_resp_header("x-request-id", xid || "")
     |> put_resp_content_type("application/json")
     |> send_resp(status, body)
   end
