@@ -1,4 +1,4 @@
-defmodule Authelixir.Domain.UseCase.Signin do
+defmodule Authelixir.Domain.UseCases.Bancolombia.Signin.Signin do
   @moduledoc """
   Caso de uso: Signin
 
@@ -12,7 +12,10 @@ defmodule Authelixir.Domain.UseCase.Signin do
   - Errores se retornan como {:error, %AppException{}} (un solo tipo de error de dominio).
   """
 
-  alias Authelixir.Domain.Model.{AppException, Session, User, ContextData}
+  alias Authelixir.Domain.Model.Bancolombia.Exception.AppException
+  alias Authelixir.Domain.Model.Bancolombia.Session.Session
+  alias Authelixir.Domain.Model.Bancolombia.User.User
+  alias Authelixir.Domain.Model.Bancolombia.Contextdata.ContextData
 
   @type context :: ContextData.t()
   @type email :: String.t()

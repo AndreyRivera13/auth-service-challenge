@@ -1,28 +1,29 @@
-defmodule Authelixir.Domain.Model.User do
+defmodule Authelixir.Domain.Model.Bancolombia.User.User do
   @moduledoc """
   User
   """
 
-  defstruct [:email, :password, :created_at]
+  defstruct [:email, :password, :name]
 
   @type t :: %__MODULE__{
           email: String.t(),
           password: String.t(),
-          created_at: DateTime.t()
+          name: String.t()
         }
 
   @email_regex ~r/^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
-  @spec build(String.t(), String.t()) ::
+  @spec build(String.t(), String.t(), String.t()) ::
           {:ok, t()} | {:error, Authelixir.Domain.Model.AppException.t()}
-  def build(email, password) do
+  def build(email, password, name) do
     with :ok <- validate_email(email),
-         :ok <- validate_password(password) do
+         :ok <- validate_password(password),
+         :ok <- validate_name(name) do
       {:ok,
        %__MODULE__{
          email: String.downcase(email),
          password: password,
-         created_at: DateTime.utc_now()
+         name: name
        }}
     end
   end
@@ -39,6 +40,7 @@ defmodule Authelixir.Domain.Model.User do
   @spec validate_password(String.t()) :: :ok | {:error, any()}
   def validate_password(p) when is_binary(p) and byte_size(p) >= 8, do: :ok
   def validate_password(_), do: error(:WEAK_PASSWORD, "Weak password")
+  def validate_name(_), do: error(:INVALID_NAME, "Invalid name")
 
   defp error(code, msg),
     do: {:error, Authelixir.Domain.Model.AppException.new(code, msg)}

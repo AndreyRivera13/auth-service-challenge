@@ -1,4 +1,4 @@
-defmodule Authelixir.Domain.Model.ContextData do
+defmodule Authelixir.Domain.Model.Bancolombia.Contextdata.ContextData do
   @moduledoc """
   ContextData
   """
@@ -28,4 +28,16 @@ defmodule Authelixir.Domain.Model.ContextData do
       _, acc -> acc
     end)
   end
+end
+defmodule Authelixir.Domain.Model.ContextData do
+  @moduledoc """
+  Contexto de trazabilidad que viaja por todas las capas.
+  """
+
+  defstruct [:message_id, :x_request_id]
+
+  @type t :: %__MODULE__{
+          message_id: String.t(),
+          x_request_id: String.t()
+        }
 end
